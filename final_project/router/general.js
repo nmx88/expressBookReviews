@@ -59,14 +59,47 @@ public_users.get("/author/:author", function (req, res) {
 
 // Get all books based on title
 public_users.get("/title/:title", function (req, res) {
-  //Write your code here
-  return res.status(300).json({ message: "Yet to be implemented" });
+  // Retrieve the title from the request parameters
+  const title = req.params.title;
+
+  // Initialize an array to store matched books
+  let matchedBooks = [];
+
+  // Iterate through the books object
+  Object.keys(books).forEach((isbn) => {
+    const book = books[isbn];
+    // Check if the book title matches the one provided in the request parameters
+    if (book.title.toLowerCase() === title.toLowerCase()) {
+      // If a match is found, add the book details to the matchedBooks array
+      matchedBooks.push({
+        isbn: isbn,
+        author: book.author,
+        reviews: book.reviews,
+      });
+    }
+  });
+
+  // If matchedBooks array is not empty, return the matched books with status 200
+  if (matchedBooks.length > 0) {
+    return res.status(200).json(matchedBooks);
+  } else {
+    // If no books are found, return a 404 status with an appropriate message
+    return res.status(404).json({ message: "Books not found with this title" });
+  }
 });
 
 //  Get book review
 public_users.get("/review/:isbn", function (req, res) {
   //Write your code here
-  return res.status(300).json({ message: "Yet to be implemented" });
+  const isbn = req.params.isbn; // Retrieve the ISBN from the request parameters
+  const book = books[isbn]; // Look up the book details using the ISBN
+  if (book && book.reviews) {
+    return res.status(200).send(JSON.stringify(book.reviews, null, 2));
+  } else {
+    return res
+      .status(404)
+      .json({ message: "This ISBN didn't return any reviews" });
+  }
 });
 
 module.exports.general = public_users;
