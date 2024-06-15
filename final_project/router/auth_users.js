@@ -1,7 +1,8 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
-const { json } = require("express");
-let books = require("./booksdb.js").default;
+let books = require("./booksdb");
+// const { json } = require("express");
+// const books = require("./booksdb.js");
 const regd_users = express.Router();
 
 let users = [];
@@ -69,18 +70,30 @@ regd_users.put("/auth/review/:isbn", (req, res) => {
   const { isbn } = req.params;
   const { review } = req.body;
 
+  const loggedInUser = req.user.username;
+
   // Check if review data is missing
-  if (!review) {
+  if (!review || typeof review !== "string") {
     return res.status(400).json({ message: "Review data is required." });
   }
 
-  // Assuming books[isbn] exists in your booksdb.js
-  if (books[isbn]) {
-    // Add the review to the book's reviews
-    books[isbn].reviews.push(review);
-    return res.status(200).json({ message: "Review added successfully." });
-  } else {
+  if (!books[isbn]) {
     return res.status(404).json({ message: "Book not found." });
+  }
+
+  if (!books[isbn].reviews) {
+    books[isbn].reviews = {};
+  }
+
+  // Check if there's already a review by the logged-in user for this ISBN
+  if (books[isbn].reviews[loggedInUser]) {
+    // Modify the existing review
+    books[isbn].reviews[loggedInUser] = review;
+    return res.status(200).json({ message: "Review updateD successfully." });
+  } else {
+    // New Review
+    books[isbn].reviews[loggedInUser] = review;
+    return res.status(200).json({ message: "Review added successfully." });
   }
 });
 
